@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "debian/jessie64" # php 5.6 - Debian 8
+  #config.vm.box = "debian/wheezy64" # php 5.4 - Debian 7
+  #config.vm.box = "debian/stretch64" # Debian 9
+
+  config.vm.box_check_update = false
+
+  config.vm.network :private_network, ip: '192.168.20.100'
+  #config.vm.network :forwarded_port, guest: 80, host: 80
+  #config.vm.network :forwarded_port, guest: 443, host: 443
+  #config.vm.network :forwarded_port, guest: 3306, host: 3306
+  #config.vm.network :forwarded_port, guest: 8080, host: 8080
+
+  #config.ssh.forward_agent = true
+
+  config.vm.synced_folder "./sync", "/var/www/html", nfs: true
+
+  config.hostsupdater.aliases = ["gifts.com"]
+
+  config.vm.provider "virtualbox" do |v|
+      v.memory = 2048
+      v.cpus = 2
+      v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+
+  config.vm.provision :shell, :path => "./install.sh"
+end
