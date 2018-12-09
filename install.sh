@@ -13,12 +13,11 @@ sudo echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo te
 sudo apt-get update && sudo apt-get upgrade -y --force-yes
 sudo apt-get install -y --force-yes php7.2-cli php7.2-mbstring php7.2-zip php7.2-xml php7.2-mysql php7.2-curl
 sudo apt-get install -y --force-yes .*php7.2
-sudo apt-get install php7.2-opcache
 sudo apt-get install -y --force-yes redis-server
 sudo apt-get install -y --force-yes redis-tools php-redis
-
-sudo echo "--> Apache mods <--"
-
+# Not tested commands
+# sudo apt-get install php7.2-sqlite3
+# sudo apt-get install php7.2-opcache
 sudo apt install -y --force-yes php libapache2-mod-php
 
 sudo apt-get install -y --force-yes apache2 apache2-doc apache2-utils
@@ -30,6 +29,65 @@ sudo a2enmod headers
 sudo service apache2 restart
 
 sudo a2dissite 000-default.conf
+
+sudo mkdir /var/www/test
+sudo mkdir /var/www/test/logs
+
+sudo chmod -R 777 /var/www/test
+
+#PHPTESTFILE=$(cat <<EOF
+#<html>
+#<head>
+#<meta charset="UTF-8"/>
+#</head>
+#<body>
+#<h1>Welcome, this test.local index.php</h1>
+#<h2>Below lines php info</h2>
+
+#<?php
+
+#error_reporting(E_ALL);
+#ini_set('error_reporting', E_ALL);
+#ini_set('display_errors',1);
+
+#$mysqli = new mysqli('localhost', 'root', 'vagrant');
+
+#/*
+# * This is the "official" OO way to do it,
+# * BUT $connect_error was broken until PHP 5.2.9 and 5.3.0.
+# */
+#if ($mysqli->connect_error) {
+#    die('Connect Error (' . $mysqli->connect_errno . ') '
+#            . $mysqli->connect_error);
+#} else { 
+#echo 'Mysql Connected !';
+#}
+#?>
+
+#<?php phpinfo();?>
+#</body>
+#</html>
+#EOF
+#)
+
+#echo "${PHPTESTFILE}" > /var/www/test/index.php
+
+#VHOSTTEST=$(cat <<EOF
+#<VirtualHost *:80>
+#     ServerAdmin webmaster@test.local
+#     ServerName test.local
+#     DocumentRoot /var/www/test
+#     ErrorLog /var/www/test/logs/error.log
+#     CustomLog /var/www/test/logs/access.log combined
+#</VirtualHost>
+#EOF
+#)
+
+#echo "${VHOSTTEST}" > /etc/apache2/sites-available/test.local.conf
+
+#sudo a2ensite test.local.conf
+
+#sudo systemctl restart apache2
 
 # Install mysql other version maria db
 sudo echo "--> Installing Mysql Server <--"
@@ -58,19 +116,46 @@ sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=compose
 
 sudo rm /tmp/composer-setup.php
 
-sudo echo "--> Clone Repository <--"
+sudo apt-get -y --force-yes install gcc
+sudo apt install -y --force-yes ruby rails
+sudo gem install sass
+sudo gem install compass
+sudo gem install bootstrap-sass
 
-cd /var/www/html/
-sudo git clone https://github.com/denizakturk/gifts.git
-cd gifts
-composer dump-autoload
-sudo mkdir var
-sudo mkdir var/log
-sudo cp /var/www/html/vhost/gifts.com.conf /etc/apache2/sites-available/gifts.com.conf
-sudo a2ensite gifts.com.conf
-sudo service apache2 restart
+sudo echo "--> Install symfony <--"
 
-sudo php /var/www/html/gifts/config/create-database.php
+composer create-project symfony/skeleton /var/www/test/symfony
+
+cd /var/www/html/sanssende.com
+sudo chmod -R 777 app/cache app/logs
+composer install --no-interaction --no-progress --prefer-dist
+
+cd /var/www/html/lotosayisal.com
+sudo chmod -R 777 app/cache app/logs
+composer install --no-interaction --no-progress --prefer-dist
+
+#VHOSTSYMFONYTEST=$(cat <<EOF
+#<VirtualHost *:80>
+#     ServerAdmin webmaster@test.local
+#     ServerName test.local
+#     DocumentRoot /var/www/test/symfony/public
+#     ErrorLog /var/www/test/logs/error.log
+#     CustomLog /var/www/test/logs/access.log combined
+#</VirtualHost>
+#EOF
+#)
+
+#sudo echo "${VHOSTSYMFONYTEST}" > /etc/apache2/sites-available/symfony.local.conf
+
+sudo cp /var/www/html/vhost/symfony.local.conf /etc/apache2/sites-available/symfony.local.conf
+sudo cp /var/www/html/vhost/sanssende.com.conf /etc/apache2/sites-available/sanssende.com.conf
+sudo cp /var/www/html/vhost/www.sanssende.com.conf /etc/apache2/sites-available/www.sanssende.com.conf
+sudo cp /var/www/html/vhost/lotosayisal.com.conf /etc/apache2/sites-available/lotosayisal.com.conf
+sudo a2ensite symfony.local.conf
+sudo a2ensite sanssende.com.conf
+sudo a2ensite www.sanssende.com.conf
+sudo a2ensite lotosayisal.com.conf
+sudo systemctl restart apache2
 
 sudo apt-get install -y --force-yes ntp ntpdate
 
